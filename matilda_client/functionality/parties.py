@@ -2,7 +2,7 @@
 Party client for Matilda Platform.
 
 Handles interaction with Parties (Organizations, Suppliers, Kitchens, Units).
-Endpoint: /v1/organization/{organization}/parties
+Endpoint: integrations/gateway/v1/parties
 """
 
 from typing import Any
@@ -21,7 +21,7 @@ class PartiesClient:
         parties = matilda.parties.get_parties(...)
     """
 
-    ENDPOINT = "/v1/organization/{organization}/parties"
+    ENDPOINT = "/integrations/gateway/v1/parties"
 
     def __init__(self, matilda_client: MatildaClient):
         self.client = matilda_client
