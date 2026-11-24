@@ -55,7 +55,7 @@ Fill in:
 ```env
 ORGANIZATION=your_organization_slug
 API_KEY=your_api_key_here
-BASE_URL=https://public-ip-matildagw.matildaplatform.com
+# BASE_URL is optional (defaults to https://{ORGANIZATION}.matildaplatform.com)
 ```
 
 ---
@@ -65,11 +65,10 @@ BASE_URL=https://public-ip-matildagw.matildaplatform.com
 ```python
 from matilda_client import MatildaClientManager, ServiceUserRequest, ServicePeriod, DayOfWeek
 
-# 1. Initialize manager (recommended pattern)
-matilda = MatildaClientManager(
-    organization="odense-kommune",
-    api_key="your-api-key",
-)
+# 1. Initialize manager (zero-config via environment variables, or explicit):
+matilda = MatildaClientManager()
+# Or explicitly:
+# matilda = MatildaClientManager(organization="odense-kommune", api_key="your-api-key")
 
 # 2. Parties (central kitchens, suppliers, units)
 parties = matilda.parties.get_parties(is_active=True)

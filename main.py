@@ -13,16 +13,15 @@ load_dotenv()
 
 
 def main():
-    organization = os.getenv("ORGANIZATION", "demo-org")
-    api_key = os.getenv("API_KEY", "demo-api-key")
+    # If ORGANIZATION is not in .env, fallback to a demo identifier for preview
+    if not os.getenv("ORGANIZATION"):
+        os.environ["ORGANIZATION"] = "demo-org"
+        os.environ["API_KEY"] = "demo-api-key"
 
-    print(f"Connecting to Matilda Platform for organization: '{organization}'...")
+    # Hybrid initialization (reads from env vars or constructor arguments)
+    matilda = MatildaClientManager()
 
-    # Initialize via MatildaClientManager (recommended)
-    matilda = MatildaClientManager(
-        organization=organization,
-        api_key=api_key,
-    )
+    print(f"Connecting to Matilda Platform ({matilda.client.base_url}) for organization: '{matilda.organization}'...")
 
     print("\n1. Exploring Parties (PartiesClient):")
     try:

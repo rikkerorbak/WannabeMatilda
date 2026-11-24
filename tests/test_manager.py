@@ -16,6 +16,7 @@ def test_manager_initialization():
         timeout=45.0,
     )
     assert manager._organization == "test-org"
+    assert manager.organization == "test-org"
     assert manager._api_key == "test-key"
     assert manager._config["timeout"] == 45.0
 
@@ -24,6 +25,25 @@ def test_manager_initialization():
     assert manager._parties_client is None
     assert manager._service_users_client is None
     assert manager._documents_client is None
+
+
+def test_manager_env_fallback(monkeypatch):
+    monkeypatch.setenv("ORGANIZATION", "env-org")
+    monkeypatch.setenv("API_KEY", "env-key")
+    manager = MatildaClientManager()
+    assert manager.organization == "env-org"
+    assert manager._api_key == "env-key"
+    assert manager.client.base_url == "https://env-org.matildaplatform.com/"
+    manager.close()
+
+
+def test_manager_missing_organization(monkeypatch):
+    import pytest
+
+    monkeypatch.delenv("ORGANIZATION", raising=False)
+    monkeypatch.delenv("MATILDA_ORGANIZATION", raising=False)
+    with pytest.raises(ValueError, match="Organization must be specified"):
+        MatildaClientManager(organization="")
 
 
 def test_manager_lazy_loading(manager):

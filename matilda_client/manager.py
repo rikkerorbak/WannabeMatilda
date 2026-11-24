@@ -6,6 +6,8 @@ consistent configuration, and optional context management.
 """
 
 
+import os
+
 from matilda_client.client import MatildaClient
 from matilda_client.functionality.documents import ServiceUserDocumentsClient
 from matilda_client.functionality.parties import PartiesClient
@@ -19,6 +21,10 @@ class MatildaClientManager:
     RECOMMENDED USAGE:
         from matilda_client import MatildaClientManager
 
+        # Zero-config (reads ORGANIZATION and API_KEY from environment):
+        matilda = MatildaClientManager()
+
+        # Or explicit config:
         matilda = MatildaClientManager(
             organization="my-org",
             api_key="...",
@@ -36,11 +42,10 @@ class MatildaClientManager:
 
     def __init__(
         self,
-        organization: str,
+        organization: str | None = None,
         api_key: str | None = None,
         bearer_token: str | None = None,
         basic_auth: tuple[str, str] | None = None,
-        base_url: str | None = None,
         timeout: float = 30.0,
         verify_ssl: bool = True,
         enable_logging: bool = True,
@@ -48,20 +53,24 @@ class MatildaClientManager:
         """
         Initialize MatildaClientManager.
 
-        :param organization: Matilda organization / tenant identifier.
-        :param api_key: Matilda API Key (x-api-key header).
-        :param bearer_token: Optional Bearer token (Authorization header).
+        :param organization: Matilda organization (optional if ORGANIZATION env var is set).
+        :param api_key: Matilda API Key (optional if API_KEY env var is set).
+        :param bearer_token: Optional Bearer token (optional if BEARER_TOKEN env var is set).
         :param basic_auth: Optional tuple (username, password) for Basic auth.
-        :param base_url: Base URL (defaults to production gateway).
         :param timeout: Request timeout in seconds (default: 30.0).
         :param verify_ssl: Verify SSL certificates (default: True).
         :param enable_logging: Enable transaction logging (default: True).
         """
-        self._organization = organization
-        self._api_key = api_key
-        self._bearer_token = bearer_token
+        org = organization or os.getenv("ORGANIZATION") or os.getenv("MATILDA_ORGANIZATION")
+        if not org or not org.strip():
+            raise ValueError(
+                "Organization must be specified via argument or ORGANIZATION environment variable."
+            )
+
+        self._organization = org.strip()
+        self._api_key = api_key or os.getenv("API_KEY") or os.getenv("MATILDA_API_KEY")
+        self._bearer_token = bearer_token or os.getenv("BEARER_TOKEN") or os.getenv("MATILDA_BEARER_TOKEN")
         self._basic_auth = basic_auth
-        self._base_url = base_url
 
         self._config = {
             "timeout": timeout,
@@ -76,6 +85,11 @@ class MatildaClientManager:
         self._documents_client: ServiceUserDocumentsClient | None = None
 
     @property
+    def organization(self) -> str:
+        """Get the organization identifier."""
+        return self._organization
+
+    @property
     def client(self) -> MatildaClient:
         """Get the base MatildaClient (lazy-loaded)."""
         if self._client is None:
@@ -84,7 +98,6 @@ class MatildaClientManager:
                 api_key=self._api_key,
                 bearer_token=self._bearer_token,
                 basic_auth=self._basic_auth,
-                base_url=self._base_url,
                 **self._config,
             )
         return self._client

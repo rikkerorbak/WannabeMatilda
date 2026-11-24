@@ -6,6 +6,7 @@ error handling with ProblemDetails support, and structured transaction logging.
 """
 
 import logging
+import os
 from typing import Any
 from urllib.parse import urljoin
 
@@ -22,15 +23,14 @@ class MatildaClient:
     instead of instantiating this class directly.
     """
 
-    DEFAULT_BASE_URL = "https://viborg.matildaplatform.com"
+    BASE_URL = "https://{organization}.matildaplatform.com"
 
     def __init__(
         self,
-        organization: str,
+        organization: str | None = None,
         api_key: str | None = None,
         bearer_token: str | None = None,
         basic_auth: tuple[str, str] | None = None,
-        base_url: str | None = None,
         timeout: float = 30.0,
         verify_ssl: bool = True,
         enable_logging: bool = True,
@@ -39,21 +39,23 @@ class MatildaClient:
         """
         Initialize the MatildaClient.
 
-        :param organization: The organization identifier / tenant in Matilda.
-        :param api_key: The API Key for 'x-api-key' authentication header.
-        :param bearer_token: Optional OAuth2/JWT token for 'Authorization: Bearer' header.
+        :param organization: Matilda organization / tenant (optional if ORGANIZATION env var is set).
+        :param api_key: Matilda API Key (optional if API_KEY env var is set).
+        :param bearer_token: Optional Bearer token (optional if BEARER_TOKEN env var is set).
         :param basic_auth: Optional tuple of (username, password) for HTTP Basic Auth.
-        :param base_url: Base URL for Matilda Gateway (defaults to production gateway).
         :param timeout: Request timeout in seconds (default: 30.0).
         :param verify_ssl: Whether to verify SSL certificates (default: True).
         :param enable_logging: Enable structured request/response logging (default: True).
         :param logger: Optional custom logger instance.
         """
-        if not organization:
-            raise ValueError("Organization must be specified.")
+        org = organization or os.getenv("ORGANIZATION") or os.getenv("MATILDA_ORGANIZATION")
+        if not org or not org.strip():
+            raise ValueError(
+                "Organization must be specified via argument or ORGANIZATION environment variable."
+            )
 
-        self.organization = organization.strip()
-        self.base_url = (base_url or self.DEFAULT_BASE_URL).rstrip("/") + "/"
+        self.organization = org.strip()
+        self.base_url = self.BASE_URL.replace("{organization}", self.organization).rstrip("/") + "/"
         self.timeout = timeout
         self.verify_ssl = verify_ssl
 
@@ -70,10 +72,13 @@ class MatildaClient:
 
         auth: httpx.Auth | None = None
 
-        if api_key:
-            headers["x-api-key"] = api_key.strip()
-        elif bearer_token:
-            headers["Authorization"] = f"Bearer {bearer_token.strip()}"
+        resolved_api_key = api_key or os.getenv("API_KEY") or os.getenv("MATILDA_API_KEY")
+        resolved_bearer_token = bearer_token or os.getenv("BEARER_TOKEN") or os.getenv("MATILDA_BEARER_TOKEN")
+
+        if resolved_api_key:
+            headers["x-api-key"] = resolved_api_key.strip()
+        elif resolved_bearer_token:
+            headers["Authorization"] = f"Bearer {resolved_bearer_token.strip()}"
         elif basic_auth:
             username, password = basic_auth
             auth = httpx.BasicAuth(username, password)
