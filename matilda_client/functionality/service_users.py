@@ -4,13 +4,13 @@ Service Users client for Matilda Platform.
 Handles Service Users (citizens/care recipients) lifecycle, searching,
 attendance tracking, and meal registrations.
 Endpoints:
-- POST   /v1/organization/{organization}/service-user/search
-- POST   /v1/organization/{organization}/service-user
-- GET    /v1/organization/{organization}/service-user/{id}
-- PUT    /v1/organization/{organization}/service-user/{id}
-- DELETE /v1/organization/{organization}/service-user/{id}
-- POST   /v1/organization/{organization}/service-user/attendance
-- POST   /v1/organization/{organization}/service-user/attendance/by-attendees
+- POST   /v1/service-user/search
+- POST   /v1/service-user
+- GET    /v1/service-user/{id}
+- PUT    /v1/service-user/{id}
+- DELETE /v1/service-user/{id}
+- POST   /v1/service-user/attendance
+- POST   /v1/service-user/attendance/by-attendees
 """
 
 from typing import Any
@@ -37,11 +37,11 @@ class ServiceUsersClient:
         users = matilda.service_users.search_service_users(...)
     """
 
-    SEARCH_ENDPOINT = "/v1/organization/{organization}/service-user/search"
-    BASE_ENDPOINT = "/v1/organization/{organization}/service-user"
-    DETAIL_ENDPOINT = "/v1/organization/{organization}/service-user/{id}"
-    ATTENDANCE_ENDPOINT = "/v1/organization/{organization}/service-user/attendance"
-    ATTENDEES_ENDPOINT = "/v1/organization/{organization}/service-user/attendance/by-attendees"
+    SEARCH_ENDPOINT = "/integrations/gateway/v1/service-user/Search"
+    BASE_ENDPOINT = "/integrations/gateway/v1/service-user"
+    DETAIL_ENDPOINT = "/integrations/gateway/v1/service-user/{id}"
+    ATTENDANCE_ENDPOINT = "/integrations/gateway/v1/service-user/attendance"
+    ATTENDEES_ENDPOINT = "/integrations/gateway/v1/service-user/attendance/by-attendees"
 
     def __init__(self, matilda_client: MatildaClient):
         self.client = matilda_client
